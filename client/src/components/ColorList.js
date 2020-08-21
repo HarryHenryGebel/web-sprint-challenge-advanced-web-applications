@@ -1,45 +1,69 @@
 import React, { useState } from "react";
-import axios from "axios";
+import requester from "easier-requests";
 
 const initialColor = {
   color: "",
-  code: { hex: "" }
+  code: { hex: "" },
 };
 
 const ColorList = ({ colors, updateColors }) => {
-  console.log(colors);
   const [editing, setEditing] = useState(false);
   const [colorToEdit, setColorToEdit] = useState(initialColor);
 
-  const editColor = color => {
+  const editColor = (color) => {
     setEditing(true);
     setColorToEdit(color);
   };
 
-  const saveEdit = e => {
-    e.preventDefault();
-    // Make a put request to save your updated color
-    // think about where will you get the id from...
-    // where is is saved right now?
-  };
+  async function saveEdit(event) {
+    const colorId = colorToEdit.id;
+    event.preventDefault();
+    try {
+      const requestId = requester.createUniqueID();
+      await requester.put(
+        `http://localhost:5000/api/colors/${colorId}`,
+        requestId,
+        colorToEdit
+      );
+    } catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      window.open("/", "_self");
+    }
+  }
 
-  const deleteColor = color => {
-    // make a delete request to delete this color
-  };
+  async function deleteColor(color) {
+    const colorId = color.id;
+
+    try {
+      const requestId = requester.createUniqueID();
+      await requester.delete(
+        `http://localhost:5000/api/colors/${colorId}`,
+        requestId
+      );
+      window.open("/", "_self");
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 
   return (
     <div className="colors-wrap">
       <p>colors</p>
       <ul>
-        {colors.map(color => (
+        {colors.map((color) => (
           <li key={color.color} onClick={() => editColor(color)}>
             <span>
-              <span className="delete" onClick={e => {
-                    e.stopPropagation();
-                    deleteColor(color)
-                  }
-                }>
-                  x
+              <span
+                className="delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteColor(color);
+                }}
+              >
+                x
               </span>{" "}
               {color.color}
             </span>
@@ -56,7 +80,7 @@ const ColorList = ({ colors, updateColors }) => {
           <label>
             color name:
             <input
-              onChange={e =>
+              onChange={(e) =>
                 setColorToEdit({ ...colorToEdit, color: e.target.value })
               }
               value={colorToEdit.color}
@@ -65,10 +89,10 @@ const ColorList = ({ colors, updateColors }) => {
           <label>
             hex code:
             <input
-              onChange={e =>
+              onChange={(e) =>
                 setColorToEdit({
                   ...colorToEdit,
-                  code: { hex: e.target.value }
+                  code: { hex: e.target.value },
                 })
               }
               value={colorToEdit.code.hex}
